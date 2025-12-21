@@ -1,0 +1,89 @@
+############################
+# OS / General
+############################
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+*.swo
+*.bak
+*.class
+*.pyc
+
+############################
+# IDEs
+############################
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.config/
+.tmp-home/
+
+############################
+# Flutter / Dart (CRITICAL)
+############################
+.dart_tool/
+.dart-tool/
+.dartServer/
+.packages
+.pub/
+.pub-cache/
+.flutter
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+coverage/
+.metadata
+
+############################
+# Flutter SDK (DO NOT COMMIT)
+############################
+flutter-sdk/
+
+############################
+# iOS
+############################
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/ephemeral/
+ios/Flutter/Flutter.framework
+ios/Flutter/App.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/.last_build_id
+DerivedData/
+*.xcworkspace
+*.xcuserdata
+*.ipa
+
+############################
+# Android
+############################
+android/.gradle/
+android/local.properties
+android/key.properties
+android/**/build/
+
+############################
+# Optional Flutter platforms (ignore for now)
+############################
+macos/
+linux/
+windows/
+web/
+
+############################
+# Firebase secrets
+############################
+**/GoogleService-Info.plist
+**/google-services.json
+
+############################
+# Temp / Backup
+############################
+*.orig
+*.rej
+*.lock

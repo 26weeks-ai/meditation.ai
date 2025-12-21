@@ -1,0 +1,164 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/timezone.dart' as tz;
+
+const _reminderBaseId = 1000;
+const _sessionPreEndId = 2001;
+const _sessionCompleteId = 2002;
+
+class NotificationService {
+  NotificationService(this._plugin);
+
+  final FlutterLocalNotificationsPlugin _plugin;
+
+  static Future<NotificationService> initialize() async {
+    final plugin = FlutterLocalNotificationsPlugin();
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
+    const iosSettings = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
+    const settings = InitializationSettings(
+      android: androidSettings,
+      iOS: iosSettings,
+    );
+    await plugin.initialize(settings);
+    return NotificationService(plugin);
+  }
+
+  Future<void> requestPermissions() async {
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.requestNotificationsPermission();
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >()
+        ?.requestPermissions(alert: true, badge: true, sound: true);
+  }
+
+  Future<void> scheduleDailyReminder({
+    required bool enabled,
+    required TimeOfDay time,
+    required List<int> daysOfWeek,
+  }) async {
+    await cancelDailyReminders();
+    if (!enabled) return;
+
+    final sanitizedDays =
+        daysOfWeek
+            .where((day) => day >= DateTime.monday && day <= DateTime.sunday)
+            .toSet()
+            .toList()
+          ..sort();
+    if (sanitizedDays.isEmpty) return;
+
+    for (final day in sanitizedDays) {
+      final date = _nextInstanceOfTime(time, day);
+      await _plugin.zonedSchedule(
+        _reminderBaseId + day,
+        'Do nothing.',
+        'One hour. One day.',
+        date,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'daily_reminder',
+            'Daily Reminder',
+            channelDescription: 'Reminds you to sit once per day.',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+      );
+    }
+  }
+
+  Future<void> scheduleSessionAlerts({
+    required int durationMinutes,
+    required bool preEndAlert,
+    required bool completionAlert,
+    required bool vibration,
+  }) async {
+    await cancelSessionAlerts();
+    final now = tz.TZDateTime.now(tz.local);
+    final completeTime = now.add(Duration(minutes: durationMinutes));
+    final androidBase = AndroidNotificationDetails(
+      'session_alerts',
+      'Session Alerts',
+      channelDescription: 'Pre-end and completion alerts',
+      importance: Importance.high,
+      priority: Priority.high,
+      enableVibration: vibration,
+      playSound: true,
+    );
+
+    if (preEndAlert && durationMinutes > 5) {
+      final preEndTime = now.add(Duration(minutes: durationMinutes - 5));
+      await _plugin.zonedSchedule(
+        _sessionPreEndId,
+        'Almost there',
+        'Five minutes remaining.',
+        preEndTime,
+        NotificationDetails(
+          android: androidBase,
+          iOS: const DarwinNotificationDetails(),
+        ),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
+    }
+
+    if (completionAlert) {
+      await _plugin.zonedSchedule(
+        _sessionCompleteId,
+        'Done.',
+        'Session completed.',
+        completeTime,
+        NotificationDetails(
+          android: androidBase,
+          iOS: const DarwinNotificationDetails(),
+        ),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
+    }
+  }
+
+  Future<void> cancelSessionAlerts() async {
+    await _plugin.cancel(_sessionPreEndId);
+    await _plugin.cancel(_sessionCompleteId);
+  }
+
+  Future<void> cancelDailyReminders() async {
+    for (var i = 1; i <= 7; i++) {
+      await _plugin.cancel(_reminderBaseId + i);
+    }
+  }
+
+  tz.TZDateTime _nextInstanceOfTime(TimeOfDay time, int weekday) {
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduled = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      time.hour,
+      time.minute,
+    );
+    while (scheduled.weekday != weekday || scheduled.isBefore(now)) {
+      scheduled = scheduled.add(const Duration(days: 1));
+    }
+    return scheduled;
+  }
+}
+
+final notificationServiceProvider = Provider<NotificationService>(
+  (ref) => throw UnimplementedError('Notification service not initialized'),
+);
