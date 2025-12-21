@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320">
+  <defs>
+    <style>
+      :root {
+        --accent: #2cf1b0;
+        --ink: #0b0f0e;
+      }
+      .word-strong { font-family: "Space Grotesk", "Sora", sans-serif; font-size: 140px; font-weight: 600; letter-spacing: 2px; }
+      .word-mono { font-family: "IBM Plex Mono", "JetBrains Mono", monospace; font-size: 96px; font-weight: 500; }
+    </style>
+    <g id="mark" stroke="var(--accent)" stroke-width="14" fill="none" stroke-linecap="round">
+      <circle cx="128" cy="128" r="82"/>
+    </g>
+  </defs>
+  <rect width="1200" height="320" fill="none"/>
+  <g transform="translate(36 24) scale(0.85)">
+    <use href="#mark"/>
+    <g fill="var(--accent)">
+      <rect x="102" y="80" width="20" height="96" rx="10"/>
+      <rect x="134" y="80" width="20" height="96" rx="10"/>
+    </g>
+  </g>
+  <text class="word-strong" x="320" y="210" fill="var(--ink)">6060</text>
+  <text class="word-mono" x="760" y="210" fill="var(--ink)">live</text>
+</svg>

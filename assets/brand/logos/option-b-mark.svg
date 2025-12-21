@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <style>
+      :root {
+        --accent: #2cf1b0;
+      }
+    </style>
+  </defs>
+  <rect width="256" height="256" fill="none"/>
+  <g stroke="var(--accent)" stroke-width="14" fill="none" stroke-linecap="round">
+    <circle cx="88" cy="128" r="52"/>
+    <circle cx="168" cy="128" r="52"/>
+  </g>
+</svg>

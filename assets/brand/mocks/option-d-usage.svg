@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <style>
+      :root {
+        --bg: #0b0f0e;
+        --panel: #111615;
+        --ink: #f5f7f6;
+        --muted: #6f7c78;
+        --accent: #2cf1b0;
+      }
+      .label { font-family: "IBM Plex Mono", "JetBrains Mono", monospace; font-size: 20px; fill: var(--muted); letter-spacing: 2px; }
+      .word { font-family: "Space Grotesk", "Sora", sans-serif; font-size: 44px; font-weight: 600; letter-spacing: 1px; fill: var(--ink); }
+      .button { font-family: "Space Grotesk", "Sora", sans-serif; font-size: 28px; font-weight: 600; fill: #0b0f0e; }
+    </style>
+    <g id="mark" stroke="var(--accent)" stroke-width="14" fill="none" stroke-linecap="round">
+      <circle cx="128" cy="128" r="82"/>
+    </g>
+  </defs>
+  <rect width="1600" height="900" fill="var(--bg)"/>
+
+  <rect x="40" y="40" width="480" height="820" rx="32" fill="var(--panel)"/>
+  <rect x="560" y="40" width="480" height="820" rx="32" fill="var(--panel)"/>
+  <rect x="1080" y="40" width="480" height="820" rx="32" fill="var(--panel)"/>
+
+  <text class="label" x="70" y="90">SPLASH</text>
+  <text class="label" x="590" y="90">HEADER</text>
+  <text class="label" x="1110" y="90">BUTTON</text>
+
+  <g transform="translate(210 230) scale(0.6)">
+    <use href="#mark"/>
+    <g fill="var(--accent)">
+      <rect x="102" y="80" width="20" height="96" rx="10"/>
+      <rect x="134" y="80" width="20" height="96" rx="10"/>
+    </g>
+  </g>
+  <text class="word" x="280" y="540" text-anchor="middle">6060live</text>
+
+  <g transform="translate(610 150) scale(0.35)">
+    <use href="#mark"/>
+    <g fill="var(--accent)">
+      <rect x="102" y="80" width="20" height="96" rx="10"/>
+      <rect x="134" y="80" width="20" height="96" rx="10"/>
+    </g>
+  </g>
+  <text class="word" x="720" y="220">6060live</text>
+  <rect x="600" y="250" width="400" height="1" fill="#1a2220"/>
+
+  <rect x="1180" y="420" width="280" height="80" rx="24" fill="var(--accent)"/>
+  <text class="button" x="1320" y="472" text-anchor="middle">Start 60 min</text>
+</svg>

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <style>
+      :root {
+        --accent: #2cf1b0;
+      }
+    </style>
+  </defs>
+  <rect width="256" height="256" fill="none"/>
+  <g fill="var(--accent)">
+    <!-- 6 -->
+    <rect x="32" y="92" width="22" height="8"/>
+    <rect x="24" y="100" width="8" height="24"/>
+    <rect x="32" y="124" width="22" height="8"/>
+    <rect x="24" y="132" width="8" height="24"/>
+    <rect x="54" y="132" width="8" height="24"/>
+    <rect x="32" y="156" width="22" height="8"/>
+
+    <!-- 0 -->
+    <rect x="78" y="92" width="22" height="8"/>
+    <rect x="70" y="100" width="8" height="24"/>
+    <rect x="100" y="100" width="8" height="24"/>
+    <rect x="70" y="132" width="8" height="24"/>
+    <rect x="100" y="132" width="8" height="24"/>
+    <rect x="78" y="156" width="22" height="8"/>
+
+    <!-- 6 -->
+    <rect x="156" y="92" width="22" height="8"/>
+    <rect x="148" y="100" width="8" height="24"/>
+    <rect x="156" y="124" width="22" height="8"/>
+    <rect x="148" y="132" width="8" height="24"/>
+    <rect x="178" y="132" width="8" height="24"/>
+    <rect x="156" y="156" width="22" height="8"/>
+
+    <!-- 0 -->
+    <rect x="202" y="92" width="22" height="8"/>
+    <rect x="194" y="100" width="8" height="24"/>
+    <rect x="224" y="100" width="8" height="24"/>
+    <rect x="194" y="132" width="8" height="24"/>
+    <rect x="224" y="132" width="8" height="24"/>
+    <rect x="202" y="156" width="22" height="8"/>
+  </g>
+  <g stroke="var(--accent)" stroke-width="8" stroke-linecap="round">
+    <line x1="116" y1="105" x2="140" y2="151"/>
+    <line x1="116" y1="151" x2="140" y2="105"/>
+  </g>
+</svg>

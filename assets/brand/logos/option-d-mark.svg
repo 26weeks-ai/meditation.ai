@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <style>
+      :root {
+        --accent: #2cf1b0;
+      }
+    </style>
+  </defs>
+  <rect width="256" height="256" fill="none"/>
+  <g stroke="var(--accent)" stroke-width="14" fill="none" stroke-linecap="round">
+    <circle cx="128" cy="128" r="82"/>
+  </g>
+  <g fill="var(--accent)">
+    <rect x="102" y="80" width="20" height="96" rx="10"/>
+    <rect x="134" y="80" width="20" height="96" rx="10"/>
+  </g>
+</svg>
