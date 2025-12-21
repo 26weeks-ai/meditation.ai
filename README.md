@@ -58,6 +58,12 @@ flutter run -d android
 - iOS: open `ios/Runner.xcworkspace` → set signing team → `flutter build ios --release`.
 - Android: update `android/key.properties` + signing configs, then `flutter build apk --release` or `flutter build appbundle`.
 
+## App icon (manual swap)
+- New monochrome assets live in `assets/blackandwhite/`.
+- iOS: replace the images in `ios/Runner/Assets.xcassets/AppIcon.appiconset` with resized variants from `assets/blackandwhite/app_icon_1024.png`.
+- Android: replace the `android/app/src/main/res/mipmap-*` launcher icons with resized variants from `assets/blackandwhite/app_icon_1024.png`.
+- If you later add `flutter_launcher_icons`, point it at `assets/blackandwhite/app_icon_1024.png` and run `flutter pub run flutter_launcher_icons`.
+
 ## Notes
 - `lib/firebase_options.dart` is a placeholder until `flutterfire configure` runs.
 - All meditation data stays local; no Firestore/Realtime DB/Storage used.

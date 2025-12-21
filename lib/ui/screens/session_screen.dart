@@ -49,6 +49,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     final state = ref.watch(sessionTimerProvider);
     final remaining = state.remaining;
     final breathingCurve = CurvedAnimation(parent: _breathController, curve: Curves.easeInOut);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -65,7 +66,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  color: Colors.white10,
+                  color: colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(60),
                 ),
               ),
@@ -76,7 +77,13 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
               style: Theme.of(context).textTheme.displayLarge,
             ),
             const SizedBox(height: 8),
-            const Text('Stay with it. Screen stays awake.'),
+            Text(
+              'Stay with it. Screen stays awake.',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: colorScheme.onSurfaceVariant),
+            ),
             const SizedBox(height: 24),
             GestureDetector(
               onLongPress: () => ref.read(sessionTimerProvider.notifier).endEarly(),
@@ -84,7 +91,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  color: Colors.white12,
+                  color: colorScheme.surface,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Center(

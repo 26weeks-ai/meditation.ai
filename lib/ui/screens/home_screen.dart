@@ -30,6 +30,7 @@ class HomeScreen extends ConsumerWidget {
     final streaks = ref.watch(streakStatsProvider);
     final selectedDuration = ref.watch(selectedDurationProvider);
     final timerState = ref.watch(sessionTimerProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -60,31 +61,36 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 4),
               Text(
                 'Stay with it.',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white70),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyLarge
+                    ?.copyWith(color: colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 20),
               _progressCard(context, streaks, settings.dailyGoalMinutes),
               const SizedBox(height: 16),
-            _durationPicker(context, ref, selectedDuration),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () async {
-                if (timerState.status == SessionStatus.running) {
-                  context.push('/session');
-                  return;
-                }
-                final controller = ref.read(sessionTimerProvider.notifier);
-                await controller.start(
-                  durationMinutes: selectedDuration,
-                  preEndAlert: settings.preEndAlertEnabled,
-                  completionAlert: settings.completionSoundEnabled,
-                  vibration: settings.vibrationEnabled,
-                );
-                if (context.mounted) {
-                  context.push('/session');
-                }
-              },
-              child: Text(timerState.status == SessionStatus.running ? 'Resume session' : 'Start session'),
+              _durationPicker(context, ref, selectedDuration),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () async {
+                  if (timerState.status == SessionStatus.running) {
+                    context.push('/session');
+                    return;
+                  }
+                  final controller = ref.read(sessionTimerProvider.notifier);
+                  await controller.start(
+                    durationMinutes: selectedDuration,
+                    preEndAlert: settings.preEndAlertEnabled,
+                    completionAlert: settings.completionSoundEnabled,
+                    vibration: settings.vibrationEnabled,
+                  );
+                  if (context.mounted) {
+                    context.push('/session');
+                  }
+                },
+                child: Text(
+                  timerState.status == SessionStatus.running ? 'Resume session' : 'Start session',
+                ),
               ),
               const SizedBox(height: 20),
               _streakCard(context, streaks),
@@ -136,7 +142,6 @@ class HomeScreen extends ConsumerWidget {
               child: LinearProgressIndicator(
                 value: percent,
                 minHeight: 10,
-                backgroundColor: Colors.white12,
               ),
             ),
           ],
@@ -189,20 +194,27 @@ class HomeScreen extends ConsumerWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _metric('Current streak', '${stats.currentStreakDays}d'),
-            _metric('Best streak', '${stats.bestStreakDays}d'),
-            _metric('Total mins', '${stats.totalMinutes}'),
+            _metric(context, 'Current streak', '${stats.currentStreakDays}d'),
+            _metric(context, 'Best streak', '${stats.bestStreakDays}d'),
+            _metric(context, 'Total mins', '${stats.totalMinutes}'),
           ],
         ),
       ),
     );
   }
 
-  Widget _metric(String label, String value) {
+  Widget _metric(BuildContext context, String label, String value) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Colors.white70)),
+        Text(
+          label,
+          style: Theme.of(context)
+              .textTheme
+              .bodySmall
+              ?.copyWith(color: colorScheme.onSurfaceVariant),
+        ),
         const SizedBox(height: 4),
         Text(
           value,

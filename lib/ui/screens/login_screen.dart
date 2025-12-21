@@ -12,6 +12,7 @@ class LoginScreen extends ConsumerWidget {
     final authState = ref.watch(authControllerProvider);
     final guestState = ref.watch(guestAuthProvider);
     final isBusy = authState.isLoading || guestState.isLoading;
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(24),
@@ -56,7 +57,7 @@ class LoginScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               Text(
                 authState.error!,
-                style: const TextStyle(color: Colors.redAccent),
+                style: TextStyle(color: colorScheme.error),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -70,7 +71,7 @@ class LoginScreen extends ConsumerWidget {
                 padding: const EdgeInsets.only(top: 16),
                 child: Text(
                   '$e',
-                  style: const TextStyle(color: Colors.redAccent),
+                  style: TextStyle(color: colorScheme.error),
                   textAlign: TextAlign.center,
                 ),
               ),

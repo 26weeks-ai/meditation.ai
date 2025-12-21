@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../storage/models/session_record.dart';
 import '../../storage/session_repository.dart';
+import '../../theme/app_theme_bw.dart';
 
 enum HistoryFilter { week, month, all }
 
@@ -53,18 +54,42 @@ class HistoryScreen extends ConsumerWidget {
                     final session = filtered[index];
                     final date = session.startTime.toLocal();
                     final status = session.completed ? 'Completed' : 'Interrupted';
+                    final statusColor = session.completed
+                        ? Theme.of(context).colorScheme.onSurface
+                        : AppColorsBW.textMuted;
                     return ListTile(
                       title: Text(
                         '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
                       ),
                       subtitle: Text(
                           'Planned ${session.plannedDurationMinutes}m • Actual ${session.actualDurationMinutes}m'),
-                      trailing: Text(
-                        status,
-                        style: TextStyle(
-                          color: session.completed ? Colors.greenAccent : Colors.orangeAccent,
-                        ),
-                      ),
+                      trailing: session.completed
+                          ? Text(
+                              status,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelMedium
+                                  ?.copyWith(color: statusColor),
+                            )
+                          : Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Theme.of(context).colorScheme.outline,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                status,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelMedium
+                                    ?.copyWith(color: statusColor),
+                              ),
+                            ),
                     );
                   },
                 );

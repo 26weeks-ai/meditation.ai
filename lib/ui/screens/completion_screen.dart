@@ -45,9 +45,9 @@ class CompletionScreen extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _stat(todayLabel, '${stats.todayMeditationMinutes} min'),
-                    _stat('Current streak', '${stats.currentStreakDays} d'),
-                    _stat('Best', '${stats.bestStreakDays} d'),
+                    _stat(context, todayLabel, '${stats.todayMeditationMinutes} min'),
+                    _stat(context, 'Current streak', '${stats.currentStreakDays} d'),
+                    _stat(context, 'Best', '${stats.bestStreakDays} d'),
                   ],
                 ),
               ),
@@ -65,11 +65,18 @@ class CompletionScreen extends ConsumerWidget {
     );
   }
 
-  Widget _stat(String label, String value) {
+  Widget _stat(BuildContext context, String label, String value) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Colors.white60)),
+        Text(
+          label,
+          style: Theme.of(context)
+              .textTheme
+              .bodySmall
+              ?.copyWith(color: colorScheme.onSurfaceVariant),
+        ),
         const SizedBox(height: 4),
         Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),
       ],

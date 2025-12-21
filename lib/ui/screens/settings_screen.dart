@@ -42,6 +42,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         data: (settings) {
           _settings ??= settings;
           final local = _settings!;
+          final selectedTheme = local.theme == AppThemePreference.light
+              ? AppThemePreference.dark
+              : local.theme;
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -156,11 +159,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ButtonSegment(
                         value: AppThemePreference.light,
                         label: Text('Light'),
+                        enabled: false,
                       ),
                     ],
-                    selected: {local.theme},
+                    selected: {selectedTheme},
                     onSelectionChanged: (value) =>
-                        _save((s) => s.theme = value.first),
+                        _save((s) => s.theme = AppThemePreference.dark),
                   ),
                 ),
                 const SizedBox(height: 16),
