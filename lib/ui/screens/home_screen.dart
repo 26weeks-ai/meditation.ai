@@ -165,23 +165,7 @@ class HomeScreen extends ConsumerWidget {
 
   Widget _durationPicker(BuildContext context, WidgetRef ref, int selected) {
     if (AppConfig.hideMultiTime) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Duration'),
-              const SizedBox(height: 8),
-              ChoiceChip(
-                label: Text('${AppConfig.fixedSessionMinutes} min'),
-                selected: true,
-                onSelected: (_) {},
-              ),
-            ],
-          ),
-        ),
-      );
+      return const SizedBox.shrink();
     }
 
     final presets = AppConfig.durationPresets;
