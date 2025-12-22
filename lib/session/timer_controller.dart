@@ -1,11 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../notifications/notification_service.dart';
 import '../storage/models/session_record.dart';
 import '../storage/session_repository.dart';
+
+const _sessionRunningPrefsKey = 'sixty_sixty_live.session_running';
 
 enum SessionStatus { idle, running, completed, interrupted }
 
@@ -54,6 +57,11 @@ class SessionTimerController extends StateNotifier<SessionTimerState> {
   final NotificationService _notifications;
   Timer? _ticker;
 
+  Future<void> _setSessionRunningFlag(bool running) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_sessionRunningPrefsKey, running);
+  }
+
   Future<void> start({
     required int durationMinutes,
     required bool preEndAlert,
@@ -72,6 +80,7 @@ class SessionTimerController extends StateNotifier<SessionTimerState> {
     final id = await _sessions.insert(record);
     record.id = id;
 
+    await _setSessionRunningFlag(true);
     await WakelockPlus.enable();
     await _notifications.scheduleSessionAlerts(
       durationMinutes: durationMinutes,
@@ -120,6 +129,7 @@ class SessionTimerController extends StateNotifier<SessionTimerState> {
 
   Future<void> _wrapUp(SessionStatus status, SessionRecord record) async {
     _ticker?.cancel();
+    await _setSessionRunningFlag(false);
     await _notifications.cancelSessionAlerts();
     await WakelockPlus.disable();
     state = state.copyWith(
@@ -146,6 +156,7 @@ class SessionTimerController extends StateNotifier<SessionTimerState> {
 
   Future<void> reset() async {
     _ticker?.cancel();
+    await _setSessionRunningFlag(false);
     await _notifications.cancelSessionAlerts();
     await WakelockPlus.disable();
     state = SessionTimerState.idle();

@@ -8,6 +8,22 @@ const _reminderBaseId = 1000;
 const _sessionPreEndId = 2001;
 const _sessionCompleteId = 2002;
 
+const _iosForegroundDetails = DarwinNotificationDetails(
+  presentAlert: true,
+  presentSound: true,
+  presentBadge: false,
+  presentBanner: true,
+  presentList: true,
+);
+
+const _iosSessionForegroundDetails = DarwinNotificationDetails(
+  presentAlert: false,
+  presentSound: true,
+  presentBadge: false,
+  presentBanner: false,
+  presentList: false,
+);
+
 class NotificationService {
   NotificationService(this._plugin);
 
@@ -76,8 +92,9 @@ class NotificationService {
             importance: Importance.high,
             priority: Priority.high,
           ),
-          iOS: DarwinNotificationDetails(),
+          iOS: _iosForegroundDetails,
         ),
+        payload: 'daily_reminder',
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
       );
@@ -114,7 +131,7 @@ class NotificationService {
         scheduledDate: preEndTime,
         notificationDetails: NotificationDetails(
           android: androidBase,
-          iOS: const DarwinNotificationDetails(),
+          iOS: _iosSessionForegroundDetails,
         ),
       );
     }
@@ -127,7 +144,7 @@ class NotificationService {
         scheduledDate: completeTime,
         notificationDetails: NotificationDetails(
           android: androidBase,
-          iOS: const DarwinNotificationDetails(),
+          iOS: _iosSessionForegroundDetails,
         ),
       );
     }
@@ -158,6 +175,7 @@ class NotificationService {
         body,
         scheduledDate,
         notificationDetails,
+        payload: 'session_alert',
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       );
     } on PlatformException catch (e) {
@@ -168,6 +186,7 @@ class NotificationService {
         body,
         scheduledDate,
         notificationDetails,
+        payload: 'session_alert',
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       );
     }
