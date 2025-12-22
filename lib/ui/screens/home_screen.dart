@@ -40,15 +40,33 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('60x60.live'),
-        actions: [
-          IconButton(
+        leadingWidth: kToolbarHeight,
+        leading: SizedBox(
+          width: kToolbarHeight,
+          child: IconButton(
             icon: const Icon(Icons.history),
             onPressed: () => context.push('/history'),
+            tooltip: 'History',
           ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => context.push('/settings'),
+        ),
+        titleSpacing: 0,
+        centerTitle: true,
+        title: Text(
+          '60x60.live',
+          textAlign: TextAlign.center,
+          style: Theme.of(context)
+              .textTheme
+              .titleMedium
+              ?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        actions: [
+          SizedBox(
+            width: kToolbarHeight,
+            child: IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: () => context.push('/settings'),
+              tooltip: 'Settings',
+            ),
           ),
         ],
       ),
