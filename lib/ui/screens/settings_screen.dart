@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
@@ -36,9 +38,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final StreakStats stats = ref.watch(streakStatsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: settingsAsync.when(
         data: (settings) {
           _settings ??= settings;
@@ -69,15 +69,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           min: 15,
                           max: 120,
                           divisions: 21,
-                          onChanged: (v) => _save((s) => s.dailyGoalMinutes = v.round()),
+                          onChanged: (v) =>
+                              _save((s) => s.dailyGoalMinutes = v.round()),
                         ),
                       if (AppConfig.hideMultiTime)
                         Text(
                           'Fixed at ${AppConfig.fixedDailyGoalMinutes} minutes.',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
                         ),
                       const SizedBox(height: 8),
                       Text('Default session: $defaultSessionMinutes min'),
@@ -87,16 +90,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           min: 15,
                           max: 90,
                           divisions: 15,
-                          onChanged: (v) =>
-                              _save((s) => s.defaultSessionDurationMinutes = v.round()),
+                          onChanged: (v) => _save(
+                            (s) => s.defaultSessionDurationMinutes = v.round(),
+                          ),
                         ),
                       if (AppConfig.hideMultiTime)
                         Text(
                           'Fixed at ${AppConfig.fixedSessionMinutes} minutes.',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
                         ),
                     ],
                   ),
@@ -104,23 +110,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SizedBox(height: 16),
                 _section(
                   'Daily Meditation Count',
-                  Column(
-                    children: [
-                      _modeOption(
-                        context,
-                        local,
-                        MeditationCountMode.cumulative,
-                        'Cumulative Time',
-                        'Counts the total time you meditate in a day by adding all completed sessions. Example: 2 min + 4 min = 6 min.',
-                      ),
-                      _modeOption(
-                        context,
-                        local,
-                        MeditationCountMode.deepest,
-                        'Deepest Sit',
-                        'Counts only your longest uninterrupted meditation session in a day. Example: 2 min + 4 min = 4 min. This encourages deeper, single sits.',
-                      ),
-                    ],
+                  RadioGroup<MeditationCountMode>(
+                    groupValue: local.meditationCountMode,
+                    onChanged: (mode) {
+                      if (mode == null) return;
+                      unawaited(_save((s) => s.meditationCountMode = mode));
+                    },
+                    child: Column(
+                      children: [
+                        _modeOption(
+                          context,
+                          local,
+                          MeditationCountMode.cumulative,
+                          'Cumulative Time',
+                          'Counts the total time you meditate in a day by adding all completed sessions. Example: 2 min + 4 min = 6 min.',
+                        ),
+                        _modeOption(
+                          context,
+                          local,
+                          MeditationCountMode.deepest,
+                          'Deepest Sit',
+                          'Counts only your longest uninterrupted meditation session in a day. Example: 2 min + 4 min = 4 min. This encourages deeper, single sits.',
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -156,12 +169,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ],
                       SwitchListTile(
                         value: local.preEndAlertEnabled,
-                        onChanged: (v) => _save((s) => s.preEndAlertEnabled = v),
+                        onChanged: (v) =>
+                            _save((s) => s.preEndAlertEnabled = v),
                         title: const Text('5 minutes remaining alert'),
                       ),
                       SwitchListTile(
                         value: local.completionSoundEnabled,
-                        onChanged: (v) => _save((s) => s.completionSoundEnabled = v),
+                        onChanged: (v) =>
+                            _save((s) => s.completionSoundEnabled = v),
                         title: const Text('Completion notification'),
                       ),
                       SwitchListTile(
@@ -200,8 +215,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ListTile(
                         leading: const Icon(Icons.ios_share),
                         title: const Text('Export summary'),
-                        subtitle:
-                            Text('Total ${stats.totalMinutes} min, streak ${stats.currentStreakDays} days'),
+                        subtitle: Text(
+                          'Total ${stats.totalMinutes} min, streak ${stats.currentStreakDays} days',
+                        ),
                         onTap: () => SharePlus.instance.share(
                           ShareParams(
                             text:
@@ -230,7 +246,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ? null
                             : () async {
                                 setState(() => _loading = true);
-                                await ref.read(authControllerProvider.notifier).signOut();
+                                await ref
+                                    .read(authControllerProvider.notifier)
+                                    .signOut();
                                 if (mounted) setState(() => _loading = false);
                               },
                         icon: const Icon(Icons.logout),
@@ -244,7 +262,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           );
         },
         error: (e, _) => Center(child: Text('Error: $e')),
-        loading: () => const Center(child: CircularProgressIndicator.adaptive()),
+        loading: () =>
+            const Center(child: CircularProgressIndicator.adaptive()),
       ),
     );
   }
@@ -301,8 +320,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final selected = local.meditationCountMode == mode;
     return RadioListTile<MeditationCountMode>(
       value: mode,
-      groupValue: local.meditationCountMode,
-      onChanged: (v) => _save((s) => s.meditationCountMode = v ?? mode),
       title: Row(
         children: [
           Expanded(child: Text(title)),
@@ -326,7 +343,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 8),
             Text(description),
             const SizedBox(height: 12),
@@ -346,11 +366,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _pickReminderTime() async {
     final current = _settings;
     if (current == null) return;
-    final initial = _parseTime(current.reminderTime) ?? const TimeOfDay(hour: 7, minute: 0);
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: initial,
-    );
+    final initial =
+        _parseTime(current.reminderTime) ?? const TimeOfDay(hour: 7, minute: 0);
+    final picked = await showTimePicker(context: context, initialTime: initial);
     if (picked != null) {
       await _save((s) => s.reminderTime = _formatTime(picked));
     }
@@ -362,7 +380,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final notifications = ref.read(notificationServiceProvider);
     if (settings.reminderEnabled) {
       await notifications.requestPermissions();
-      final time = _parseTime(settings.reminderTime) ?? const TimeOfDay(hour: 7, minute: 0);
+      final time =
+          _parseTime(settings.reminderTime) ??
+          const TimeOfDay(hour: 7, minute: 0);
       await notifications.scheduleDailyReminder(
         enabled: true,
         time: time,

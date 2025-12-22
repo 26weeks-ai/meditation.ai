@@ -11,10 +11,7 @@ class AuthUiState {
   final String? error;
 
   AuthUiState copyWith({bool? isLoading, String? error}) {
-    return AuthUiState(
-      isLoading: isLoading ?? this.isLoading,
-      error: error,
-    );
+    return AuthUiState(isLoading: isLoading ?? this.isLoading, error: error);
   }
 }
 
@@ -26,10 +23,6 @@ class AuthController extends StateNotifier<AuthUiState> {
 
   Future<void> signInWithGoogle() async {
     await _signIn(_auth.signInWithGoogle);
-  }
-
-  Future<void> signInWithApple() async {
-    await _signIn(_auth.signInWithApple);
   }
 
   Future<void> signOut() async {
@@ -58,8 +51,8 @@ class AuthController extends StateNotifier<AuthUiState> {
 
 final authControllerProvider =
     StateNotifierProvider<AuthController, AuthUiState>((ref) {
-  return AuthController(
-    ref.watch(authServiceProvider),
-    ref.watch(guestAuthProvider.notifier),
-  );
-});
+      return AuthController(
+        ref.watch(authServiceProvider),
+        ref.watch(guestAuthProvider.notifier),
+      );
+    });

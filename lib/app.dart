@@ -13,8 +13,9 @@ class App extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     final settings = ref.watch(settingsProvider).valueOrNull;
-    final themeMode =
-        settings?.theme == AppThemePreference.light ? ThemeMode.light : ThemeMode.dark;
+    final themeMode = settings?.theme == AppThemePreference.light
+        ? ThemeMode.light
+        : ThemeMode.dark;
     return MaterialApp.router(
       title: '60x60.live',
       debugShowCheckedModeBanner: false,

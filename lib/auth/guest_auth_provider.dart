@@ -39,6 +39,7 @@ class GuestAuthNotifier extends StateNotifier<AsyncValue<bool>> {
   }
 }
 
-final guestAuthProvider = StateNotifierProvider<GuestAuthNotifier, AsyncValue<bool>>(
-  (ref) => GuestAuthNotifier(),
-);
+final guestAuthProvider =
+    StateNotifierProvider<GuestAuthNotifier, AsyncValue<bool>>(
+      (ref) => GuestAuthNotifier(),
+    );

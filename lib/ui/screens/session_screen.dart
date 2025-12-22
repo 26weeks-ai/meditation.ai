@@ -24,17 +24,19 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
       duration: const Duration(seconds: 6),
     )..repeat(reverse: true);
 
-    _sessionListener =
-        ref.listenManual<SessionTimerState>(sessionTimerProvider, (previous, next) {
-      if (previous?.status != next.status &&
-          (next.status == SessionStatus.completed ||
-              next.status == SessionStatus.interrupted)) {
-        final record = next.record;
-        if (mounted) {
-          context.go('/completion', extra: record);
+    _sessionListener = ref.listenManual<SessionTimerState>(
+      sessionTimerProvider,
+      (previous, next) {
+        if (previous?.status != next.status &&
+            (next.status == SessionStatus.completed ||
+                next.status == SessionStatus.interrupted)) {
+          final record = next.record;
+          if (mounted) {
+            context.go('/completion', extra: record);
+          }
         }
-      }
-    });
+      },
+    );
   }
 
   @override
@@ -48,20 +50,24 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   Widget build(BuildContext context) {
     final state = ref.watch(sessionTimerProvider);
     final remaining = state.remaining;
-    final breathingCurve = CurvedAnimation(parent: _breathController, curve: Curves.easeInOut);
+    final breathingCurve = CurvedAnimation(
+      parent: _breathController,
+      curve: Curves.easeInOut,
+    );
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Do nothing'),
-      ),
+      appBar: AppBar(title: const Text('Do nothing')),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ScaleTransition(
-              scale: Tween<double>(begin: 0.85, end: 1.05).animate(breathingCurve),
+              scale: Tween<double>(
+                begin: 0.85,
+                end: 1.05,
+              ).animate(breathingCurve),
               child: Container(
                 width: 120,
                 height: 120,
@@ -79,14 +85,14 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
             const SizedBox(height: 8),
             Text(
               'Stay with it. Screen stays awake.',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: colorScheme.onSurfaceVariant),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 24),
             GestureDetector(
-              onLongPress: () => ref.read(sessionTimerProvider.notifier).endEarly(),
+              onLongPress: () =>
+                  ref.read(sessionTimerProvider.notifier).endEarly(),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 14),
@@ -94,9 +100,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
                   color: colorScheme.surface,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Center(
-                  child: Text('Long press to end'),
-                ),
+                child: const Center(child: Text('Long press to end')),
               ),
             ),
           ],

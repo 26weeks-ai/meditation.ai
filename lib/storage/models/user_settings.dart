@@ -3,6 +3,7 @@ import 'package:isar/isar.dart';
 part 'user_settings.g.dart';
 
 enum AppThemePreference { dark, light }
+
 enum MeditationCountMode { cumulative, deepest }
 
 @collection

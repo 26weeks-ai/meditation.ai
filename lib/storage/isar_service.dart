@@ -92,10 +92,7 @@ Future<Isar> _openAndVerifyIsar(Directory dir, String name) async {
 
 Future<Isar> _openIsar(Directory dir, String name) {
   return Isar.open(
-    [
-      UserSettingsSchema,
-      SessionRecordSchema,
-    ],
+    [UserSettingsSchema, SessionRecordSchema],
     directory: dir.path,
     name: name,
   );

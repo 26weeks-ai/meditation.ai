@@ -31,7 +31,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         _defaultDuration = AppConfig.fixedSessionMinutes;
       } else {
         _dailyGoal = _clamp(settings.dailyGoalMinutes, 15, 120);
-        _defaultDuration = _clamp(settings.defaultSessionDurationMinutes, 15, 90);
+        _defaultDuration = _clamp(
+          settings.defaultSessionDurationMinutes,
+          15,
+          90,
+        );
       }
       _reminderEnabled = settings.reminderEnabled;
       _reminderDays = _normalizeReminderDays(settings.reminderDays);
@@ -73,15 +77,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         max: 120,
                         divisions: 21,
                         label: '$_dailyGoal',
-                        onChanged: (v) => setState(() => _dailyGoal = v.round()),
+                        onChanged: (v) =>
+                            setState(() => _dailyGoal = v.round()),
                       ),
                     if (AppConfig.hideMultiTime)
                       Text(
                         'Fixed at ${AppConfig.fixedDailyGoalMinutes} minutes.',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                   ],
                 ),
@@ -106,10 +110,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     if (AppConfig.hideMultiTime)
                       Text(
                         'Fixed at ${AppConfig.fixedSessionMinutes} minutes.',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                   ],
                 ),

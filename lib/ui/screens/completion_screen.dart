@@ -15,14 +15,13 @@ class CompletionScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final StreakStats stats = ref.watch(streakStatsProvider);
-    final todayLabel =
-        stats.mode == MeditationCountMode.deepest ? 'Deepest sit today' : 'Today';
+    final todayLabel = stats.mode == MeditationCountMode.deepest
+        ? 'Deepest sit today'
+        : 'Today';
     final session = record is SessionRecord ? record as SessionRecord : null;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Done'),
-      ),
+      appBar: AppBar(title: const Text('Done')),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -45,8 +44,16 @@ class CompletionScreen extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _stat(context, todayLabel, '${stats.todayMeditationMinutes} min'),
-                    _stat(context, 'Current streak', '${stats.currentStreakDays} d'),
+                    _stat(
+                      context,
+                      todayLabel,
+                      '${stats.todayMeditationMinutes} min',
+                    ),
+                    _stat(
+                      context,
+                      'Current streak',
+                      '${stats.currentStreakDays} d',
+                    ),
                     _stat(context, 'Best', '${stats.bestStreakDays} d'),
                   ],
                 ),
@@ -72,10 +79,9 @@ class CompletionScreen extends ConsumerWidget {
       children: [
         Text(
           label,
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall
-              ?.copyWith(color: colorScheme.onSurfaceVariant),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 4),
         Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),

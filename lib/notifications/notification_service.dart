@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/services.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 const _reminderBaseId = 1000;
@@ -50,6 +51,7 @@ class NotificationService {
   }) async {
     await cancelDailyReminders();
     if (!enabled) return;
+    await requestPermissions();
 
     final sanitizedDays =
         daysOfWeek
@@ -89,6 +91,8 @@ class NotificationService {
     required bool vibration,
   }) async {
     await cancelSessionAlerts();
+    if (!preEndAlert && !completionAlert) return;
+    await requestPermissions();
     final now = tz.TZDateTime.now(tz.local);
     final completeTime = now.add(Duration(minutes: durationMinutes));
     final androidBase = AndroidNotificationDetails(
@@ -103,30 +107,28 @@ class NotificationService {
 
     if (preEndAlert && durationMinutes > 5) {
       final preEndTime = now.add(Duration(minutes: durationMinutes - 5));
-      await _plugin.zonedSchedule(
-        _sessionPreEndId,
-        'Almost there',
-        'Five minutes remaining.',
-        preEndTime,
-        NotificationDetails(
+      await _zonedScheduleWithExactFallback(
+        id: _sessionPreEndId,
+        title: 'Almost there',
+        body: 'Five minutes remaining.',
+        scheduledDate: preEndTime,
+        notificationDetails: NotificationDetails(
           android: androidBase,
           iOS: const DarwinNotificationDetails(),
         ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       );
     }
 
     if (completionAlert) {
-      await _plugin.zonedSchedule(
-        _sessionCompleteId,
-        'Done.',
-        'Session completed.',
-        completeTime,
-        NotificationDetails(
+      await _zonedScheduleWithExactFallback(
+        id: _sessionCompleteId,
+        title: 'Done.',
+        body: 'Session completed.',
+        scheduledDate: completeTime,
+        notificationDetails: NotificationDetails(
           android: androidBase,
           iOS: const DarwinNotificationDetails(),
         ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       );
     }
   }
@@ -139,6 +141,35 @@ class NotificationService {
   Future<void> cancelDailyReminders() async {
     for (var i = 1; i <= 7; i++) {
       await _plugin.cancel(_reminderBaseId + i);
+    }
+  }
+
+  Future<void> _zonedScheduleWithExactFallback({
+    required int id,
+    required String title,
+    required String body,
+    required tz.TZDateTime scheduledDate,
+    required NotificationDetails notificationDetails,
+  }) async {
+    try {
+      await _plugin.zonedSchedule(
+        id,
+        title,
+        body,
+        scheduledDate,
+        notificationDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
+    } on PlatformException catch (e) {
+      if (e.code != 'exact_alarms_not_permitted') rethrow;
+      await _plugin.zonedSchedule(
+        id,
+        title,
+        body,
+        scheduledDate,
+        notificationDetails,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      );
     }
   }
 

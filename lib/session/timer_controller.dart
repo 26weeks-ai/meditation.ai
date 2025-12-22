@@ -40,15 +40,15 @@ class SessionTimerState {
   }
 
   factory SessionTimerState.idle() => const SessionTimerState(
-        status: SessionStatus.idle,
-        elapsed: Duration.zero,
-        record: null,
-      );
+    status: SessionStatus.idle,
+    elapsed: Duration.zero,
+    record: null,
+  );
 }
 
 class SessionTimerController extends StateNotifier<SessionTimerState> {
   SessionTimerController(this._sessions, this._notifications)
-      : super(SessionTimerState.idle());
+    : super(SessionTimerState.idle());
 
   final SessionRepository _sessions;
   final NotificationService _notifications;
@@ -160,7 +160,7 @@ class SessionTimerController extends StateNotifier<SessionTimerState> {
 
 final sessionTimerProvider =
     StateNotifierProvider<SessionTimerController, SessionTimerState>((ref) {
-  final sessions = ref.watch(sessionRepositoryProvider);
-  final notifications = ref.watch(notificationServiceProvider);
-  return SessionTimerController(sessions, notifications);
-});
+      final sessions = ref.watch(sessionRepositoryProvider);
+      final notifications = ref.watch(notificationServiceProvider);
+      return SessionTimerController(sessions, notifications);
+    });

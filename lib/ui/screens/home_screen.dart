@@ -9,13 +9,7 @@ import '../../storage/models/user_settings.dart';
 import '../../storage/settings_repository.dart';
 import '../../storage/session_repository.dart';
 
-final selectedDurationProvider = StateProvider.autoDispose<int>((ref) {
-  if (AppConfig.hideMultiTime) {
-    return AppConfig.fixedSessionMinutes;
-  }
-  final settings = ref.read(settingsProvider).valueOrNull;
-  return settings?.defaultSessionDurationMinutes ?? AppConfig.fixedSessionMinutes;
-});
+final selectedDurationProvider = StateProvider.autoDispose<int?>((ref) => null);
 
 final streakStatsProvider = Provider<StreakStats>((ref) {
   final sessions = ref.watch(sessionHistoryProvider).valueOrNull ?? [];
@@ -71,9 +65,13 @@ class HomeScreen extends ConsumerWidget {
         ],
       ),
       body: settingsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator.adaptive()),
+        loading: () =>
+            const Center(child: CircularProgressIndicator.adaptive()),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (settings) {
+          final effectiveDuration = AppConfig.hideMultiTime
+              ? AppConfig.fixedSessionMinutes
+              : (selectedDuration ?? settings.defaultSessionDurationMinutes);
           final goalMinutes = AppConfig.hideMultiTime
               ? AppConfig.fixedDailyGoalMinutes
               : settings.dailyGoalMinutes;
@@ -89,15 +87,14 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Text(
                   'Stay with it.',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyLarge
-                      ?.copyWith(color: colorScheme.onSurfaceVariant),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 _progressCard(context, streaks, goalMinutes),
                 const SizedBox(height: 16),
-                _durationPicker(context, ref, selectedDuration),
+                _durationPicker(context, ref, effectiveDuration),
                 const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: () async {
@@ -107,7 +104,7 @@ class HomeScreen extends ConsumerWidget {
                     }
                     final controller = ref.read(sessionTimerProvider.notifier);
                     await controller.start(
-                      durationMinutes: selectedDuration,
+                      durationMinutes: effectiveDuration,
                       preEndAlert: settings.preEndAlertEnabled,
                       completionAlert: settings.completionSoundEnabled,
                       vibration: settings.vibrationEnabled,
@@ -151,8 +148,9 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _progressCard(BuildContext context, StreakStats stats, int goal) {
-    final label =
-        stats.mode == MeditationCountMode.deepest ? 'Deepest sit today' : 'Today';
+    final label = stats.mode == MeditationCountMode.deepest
+        ? 'Deepest sit today'
+        : 'Today';
     final todayValue = stats.todayMeditationMinutes;
     final percent = (todayValue / goal).clamp(0, 1.0).toDouble();
     return Card(
@@ -170,10 +168,7 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: LinearProgressIndicator(
-                value: percent,
-                minHeight: 10,
-              ),
+              child: LinearProgressIndicator(value: percent, minHeight: 10),
             ),
           ],
         ),
@@ -202,7 +197,8 @@ class HomeScreen extends ConsumerWidget {
                     (m) => ChoiceChip(
                       label: Text('$m min'),
                       selected: selected == m,
-                      onSelected: (_) => ref.read(selectedDurationProvider.notifier).state = m,
+                      onSelected: (_) =>
+                          ref.read(selectedDurationProvider.notifier).state = m,
                     ),
                   )
                   .toList(),
@@ -214,7 +210,8 @@ class HomeScreen extends ConsumerWidget {
               min: 10,
               max: 120,
               divisions: 22,
-              onChanged: (v) => ref.read(selectedDurationProvider.notifier).state = v.round(),
+              onChanged: (v) =>
+                  ref.read(selectedDurationProvider.notifier).state = v.round(),
             ),
           ],
         ),
@@ -245,10 +242,9 @@ class HomeScreen extends ConsumerWidget {
       children: [
         Text(
           label,
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall
-              ?.copyWith(color: colorScheme.onSurfaceVariant),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 4),
         Text(

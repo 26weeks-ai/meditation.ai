@@ -31,18 +31,12 @@ class LoginScreen extends ConsumerWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: isBusy
-                  ? null
-                  : () => ref.read(authControllerProvider.notifier).signInWithApple(),
-              icon: const Icon(Icons.apple),
-              label: const Text('Continue with Apple'),
-            ),
-            const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: isBusy
                   ? null
-                  : () => ref.read(authControllerProvider.notifier).signInWithGoogle(),
+                  : () => ref
+                        .read(authControllerProvider.notifier)
+                        .signInWithGoogle(),
               icon: const Icon(Icons.login),
               label: const Text('Continue with Google'),
             ),

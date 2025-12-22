@@ -1,13 +1,13 @@
 # 60x60.live — Flutter (iOS-first, Android-ready)
 
-Minimal “do nothing” meditation timer inspired by Naval’s 60 minutes for 60 days. Offline-first: all sessions, streaks, schedules, and settings stay on-device. Firebase Auth is used only for login (Apple + Google).
+Minimal “do nothing” meditation timer inspired by Naval’s 60 minutes for 60 days. Offline-first: all sessions, streaks, schedules, and settings stay on-device. Firebase Auth is used only for login (Google).
 
 ## Stack
 - Flutter (stable 3.38) + Dart 3.10
 - State: Riverpod 2.6
 - Local DB: Isar
 - Local notifications: flutter_local_notifications + timezone
-- Auth: firebase_auth, google_sign_in, sign_in_with_apple
+- Auth: firebase_auth, google_sign_in
 - Utilities: wakelock_plus, shared_preferences, share_plus, path_provider, intl
 
 ## Project layout
@@ -18,13 +18,13 @@ Minimal “do nothing” meditation timer inspired by Naval’s 60 minutes for 6
 - `lib/notifications/` — local notification setup/scheduling
 - `lib/ui/screens/` — Splash, Login, Onboarding, Home, Session, Completion, History, Settings
 
-## Firebase setup (required before running)
+## Firebase setup (required for Google sign-in)
+You can run the app in Guest mode without Firebase, but Google sign-in requires the setup below.
 1) Create Firebase project and iOS/Android apps with these IDs (from `flutter create --org live.sixtyxsix --project-name sixty_sixty_live`):
    - iOS bundle id: `live.sixtyxsix.sixtySixtyLive`
    - Android app id: `live.sixtyxsix.sixty_sixty_live`
-2) Run `flutterfire configure --project <your-project-id>` in the repo. This overwrites `lib/firebase_options.dart` and drops `GoogleService-Info.plist` (iOS) and `google-services.json` (Android) into platform folders.
+2) Run `flutterfire configure --project <your-project-id>` in the repo. This overwrites `lib/firebase_options.dart` and drops `GoogleService-Info.plist` (iOS) and `google-services.json` (Android) into platform folders (both gitignored).
 3) iOS Google Sign-In: ensure `CFBundleURLTypes` in `ios/Runner/Info.plist` contains the reversed client ID from `GoogleService-Info.plist`. `flutterfire configure` normally adds it—verify if sign-in fails.
-4) Enable Sign in with Apple in the Firebase console and turn on the “Sign in with Apple” capability in Xcode for the Runner target.
 
 ## Running
 ```bash
@@ -65,6 +65,6 @@ flutter run -d android
 - If you later add `flutter_launcher_icons`, point it at `assets/blackandwhite/app_icon_1024.png` and run `flutter pub run flutter_launcher_icons`.
 
 ## Notes
-- `lib/firebase_options.dart` is a placeholder until `flutterfire configure` runs.
+- `lib/firebase_options.dart` may be overwritten by `flutterfire configure` for your Firebase project.
 - All meditation data stays local; no Firestore/Realtime DB/Storage used.
 - If you change models in `lib/storage/models`, rerun build_runner to regenerate Isar schemas.

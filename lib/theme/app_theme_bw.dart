@@ -72,14 +72,8 @@ class AppThemeBW {
             fontSize: 20,
             fontWeight: FontWeight.w600,
           ),
-          bodyLarge: const TextStyle(
-            fontSize: 16,
-            height: 1.5,
-          ),
-          bodyMedium: const TextStyle(
-            fontSize: 14,
-            height: 1.5,
-          ),
+          bodyLarge: const TextStyle(fontSize: 16, height: 1.5),
+          bodyMedium: const TextStyle(fontSize: 14, height: 1.5),
           labelLarge: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -143,9 +137,7 @@ class AppThemeBW {
             AppColorsBW.pureBlack.withValues(alpha: 0.08),
           ),
           shape: WidgetStateProperty.all(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-            ),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
           ),
         ),
       ),
@@ -165,9 +157,7 @@ class AppThemeBW {
             ),
           ),
           shape: WidgetStateProperty.all(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
         ),
       ),
@@ -216,26 +206,22 @@ class AppThemeBW {
         ),
       ),
       switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith(
-          (states) {
-            if (states.contains(WidgetState.disabled)) {
-              return AppColorsBW.disabled;
-            }
-            return states.contains(WidgetState.selected)
-                ? AppColorsBW.pureWhite
-                : AppColorsBW.textMuted;
-          },
-        ),
-        trackColor: WidgetStateProperty.resolveWith(
-          (states) {
-            if (states.contains(WidgetState.disabled)) {
-              return AppColorsBW.border;
-            }
-            return states.contains(WidgetState.selected)
-                ? AppColorsBW.border
-                : AppColorsBW.surfaceElevated;
-          },
-        ),
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return AppColorsBW.disabled;
+          }
+          return states.contains(WidgetState.selected)
+              ? AppColorsBW.pureWhite
+              : AppColorsBW.textMuted;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return AppColorsBW.border;
+          }
+          return states.contains(WidgetState.selected)
+              ? AppColorsBW.border
+              : AppColorsBW.surfaceElevated;
+        }),
         trackOutlineColor: WidgetStateProperty.all(AppColorsBW.border),
         overlayColor: WidgetStateProperty.all(
           AppColorsBW.pureWhite.withValues(alpha: 0.08),
@@ -244,42 +230,34 @@ class AppThemeBW {
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
           textStyle: WidgetStateProperty.all(textTheme.labelLarge),
-          backgroundColor: WidgetStateProperty.resolveWith(
-            (states) {
-              if (states.contains(WidgetState.disabled)) {
-                return AppColorsBW.transparent;
-              }
-              return states.contains(WidgetState.selected)
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.disabled)) {
+              return AppColorsBW.transparent;
+            }
+            return states.contains(WidgetState.selected)
+                ? AppColorsBW.pureWhite
+                : AppColorsBW.transparent;
+          }),
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.disabled)) {
+              return AppColorsBW.disabled;
+            }
+            return states.contains(WidgetState.selected)
+                ? AppColorsBW.pureBlack
+                : AppColorsBW.textPrimary;
+          }),
+          side: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.disabled)) {
+              return const BorderSide(color: AppColorsBW.disabled);
+            }
+            return BorderSide(
+              color: states.contains(WidgetState.selected)
                   ? AppColorsBW.pureWhite
-                  : AppColorsBW.transparent;
-            },
-          ),
-          foregroundColor: WidgetStateProperty.resolveWith(
-            (states) {
-              if (states.contains(WidgetState.disabled)) {
-                return AppColorsBW.disabled;
-              }
-              return states.contains(WidgetState.selected)
-                  ? AppColorsBW.pureBlack
-                  : AppColorsBW.textPrimary;
-            },
-          ),
-          side: WidgetStateProperty.resolveWith(
-            (states) {
-              if (states.contains(WidgetState.disabled)) {
-                return const BorderSide(color: AppColorsBW.disabled);
-              }
-              return BorderSide(
-                color: states.contains(WidgetState.selected)
-                    ? AppColorsBW.pureWhite
-                    : AppColorsBW.border,
-              );
-            },
-          ),
+                  : AppColorsBW.border,
+            );
+          }),
           shape: WidgetStateProperty.all(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
         ),
       ),
@@ -298,9 +276,7 @@ class AppThemeBW {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColorsBW.surface,
-        hintStyle: textTheme.bodyMedium?.copyWith(
-          color: AppColorsBW.textMuted,
-        ),
+        hintStyle: textTheme.bodyMedium?.copyWith(color: AppColorsBW.textMuted),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColorsBW.border),

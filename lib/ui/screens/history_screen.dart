@@ -7,7 +7,9 @@ import '../../theme/app_theme_bw.dart';
 
 enum HistoryFilter { week, month, all }
 
-final historyFilterProvider = StateProvider<HistoryFilter>((ref) => HistoryFilter.week);
+final historyFilterProvider = StateProvider<HistoryFilter>(
+  (ref) => HistoryFilter.week,
+);
 
 class HistoryScreen extends ConsumerWidget {
   const HistoryScreen({super.key});
@@ -18,9 +20,7 @@ class HistoryScreen extends ConsumerWidget {
     final filter = ref.watch(historyFilterProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('History'),
-      ),
+      appBar: AppBar(title: const Text('History')),
       body: Column(
         children: [
           Padding(
@@ -31,12 +31,13 @@ class HistoryScreen extends ConsumerWidget {
                 final labels = {
                   HistoryFilter.week: 'Last 7 days',
                   HistoryFilter.month: 'Last 30 days',
-                  HistoryFilter.all: 'All'
+                  HistoryFilter.all: 'All',
                 };
                 return ChoiceChip(
                   label: Text(labels[f]!),
                   selected: filter == f,
-                  onSelected: (_) => ref.read(historyFilterProvider.notifier).state = f,
+                  onSelected: (_) =>
+                      ref.read(historyFilterProvider.notifier).state = f,
                 );
               }).toList(),
             ),
@@ -53,7 +54,9 @@ class HistoryScreen extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     final session = filtered[index];
                     final date = session.startTime.toLocal();
-                    final status = session.completed ? 'Completed' : 'Interrupted';
+                    final status = session.completed
+                        ? 'Completed'
+                        : 'Interrupted';
                     final statusColor = session.completed
                         ? Theme.of(context).colorScheme.onSurface
                         : AppColorsBW.textMuted;
@@ -62,13 +65,12 @@ class HistoryScreen extends ConsumerWidget {
                         '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
                       ),
                       subtitle: Text(
-                          'Planned ${session.plannedDurationMinutes}m • Actual ${session.actualDurationMinutes}m'),
+                        'Planned ${session.plannedDurationMinutes}m • Actual ${session.actualDurationMinutes}m',
+                      ),
                       trailing: session.completed
                           ? Text(
                               status,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelMedium
+                              style: Theme.of(context).textTheme.labelMedium
                                   ?.copyWith(color: statusColor),
                             )
                           : Container(
@@ -84,9 +86,7 @@ class HistoryScreen extends ConsumerWidget {
                               ),
                               child: Text(
                                 status,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelMedium
+                                style: Theme.of(context).textTheme.labelMedium
                                     ?.copyWith(color: statusColor),
                               ),
                             ),
@@ -94,7 +94,8 @@ class HistoryScreen extends ConsumerWidget {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator.adaptive()),
+              loading: () =>
+                  const Center(child: CircularProgressIndicator.adaptive()),
               error: (e, _) => Center(child: Text('Error: $e')),
             ),
           ),
@@ -103,7 +104,10 @@ class HistoryScreen extends ConsumerWidget {
     );
   }
 
-  List<SessionRecord> _filterSessions(List<SessionRecord> sessions, HistoryFilter filter) {
+  List<SessionRecord> _filterSessions(
+    List<SessionRecord> sessions,
+    HistoryFilter filter,
+  ) {
     if (filter == HistoryFilter.all) return sessions;
     final now = DateTime.now();
     final threshold = filter == HistoryFilter.week

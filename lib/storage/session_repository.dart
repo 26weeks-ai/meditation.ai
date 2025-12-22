@@ -20,10 +20,9 @@ class SessionRepository {
   }
 
   Stream<List<SessionRecord>> watchAll() {
-    return _isar.sessionRecords
-        .where()
-        .sortByStartTimeDesc()
-        .watch(fireImmediately: true);
+    return _isar.sessionRecords.where().sortByStartTimeDesc().watch(
+      fireImmediately: true,
+    );
   }
 
   Future<List<SessionRecord>> fetchAll() {
