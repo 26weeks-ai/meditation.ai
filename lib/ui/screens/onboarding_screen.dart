@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../config/app_config.dart';
 import '../../notifications/notification_service.dart';
 import '../../storage/settings_repository.dart';
 
@@ -25,8 +26,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     super.didChangeDependencies();
     final settings = ref.read(settingsProvider).valueOrNull;
     if (settings != null && !_hydrated) {
-      _dailyGoal = _clamp(settings.dailyGoalMinutes, 15, 120);
-      _defaultDuration = _clamp(settings.defaultSessionDurationMinutes, 15, 90);
+      if (AppConfig.hideMultiTime) {
+        _dailyGoal = AppConfig.fixedDailyGoalMinutes;
+        _defaultDuration = AppConfig.fixedSessionMinutes;
+      } else {
+        _dailyGoal = _clamp(settings.dailyGoalMinutes, 15, 120);
+        _defaultDuration = _clamp(settings.defaultSessionDurationMinutes, 15, 90);
+      }
       _reminderEnabled = settings.reminderEnabled;
       _reminderDays = _normalizeReminderDays(settings.reminderDays);
       _reminderTime = _parseTime(settings.reminderTime) ?? _reminderTime;
@@ -60,14 +66,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('$_dailyGoal minutes'),
-                    Slider(
-                      value: _dailyGoal.toDouble(),
-                      min: 15,
-                      max: 120,
-                      divisions: 21,
-                      label: '$_dailyGoal',
-                      onChanged: (v) => setState(() => _dailyGoal = v.round()),
-                    ),
+                    if (!AppConfig.hideMultiTime)
+                      Slider(
+                        value: _dailyGoal.toDouble(),
+                        min: 15,
+                        max: 120,
+                        divisions: 21,
+                        label: '$_dailyGoal',
+                        onChanged: (v) => setState(() => _dailyGoal = v.round()),
+                      ),
+                    if (AppConfig.hideMultiTime)
+                      Text(
+                        'Fixed at ${AppConfig.fixedDailyGoalMinutes} minutes.',
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      ),
                   ],
                 ),
               ),
@@ -78,15 +93,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('$_defaultDuration minutes'),
-                    Slider(
-                      value: _defaultDuration.toDouble(),
-                      min: 15,
-                      max: 90,
-                      divisions: 15,
-                      label: '$_defaultDuration',
-                      onChanged: (v) =>
-                          setState(() => _defaultDuration = v.round()),
-                    ),
+                    if (!AppConfig.hideMultiTime)
+                      Slider(
+                        value: _defaultDuration.toDouble(),
+                        min: 15,
+                        max: 90,
+                        divisions: 15,
+                        label: '$_defaultDuration',
+                        onChanged: (v) =>
+                            setState(() => _defaultDuration = v.round()),
+                      ),
+                    if (AppConfig.hideMultiTime)
+                      Text(
+                        'Fixed at ${AppConfig.fixedSessionMinutes} minutes.',
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      ),
                   ],
                 ),
               ),
@@ -199,8 +223,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Future<void> _saveAndGo() async {
     debugPrint('Onboarding: finish tapped');
     final normalizedDays = _normalizeReminderDays(_reminderDays);
-    final dailyGoal = _clamp(_dailyGoal, 15, 120);
-    final defaultDuration = _clamp(_defaultDuration, 15, 90);
+    final dailyGoal = AppConfig.hideMultiTime
+        ? AppConfig.fixedDailyGoalMinutes
+        : _clamp(_dailyGoal, 15, 120);
+    final defaultDuration = AppConfig.hideMultiTime
+        ? AppConfig.fixedSessionMinutes
+        : _clamp(_defaultDuration, 15, 90);
 
     if (_reminderEnabled && normalizedDays.isEmpty) {
       if (mounted) {

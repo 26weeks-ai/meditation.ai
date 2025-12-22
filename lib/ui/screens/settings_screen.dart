@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../auth/auth_controller.dart';
+import '../../config/app_config.dart';
 import '../../notifications/notification_service.dart';
 import '../../session/streak_service.dart';
 import '../../storage/models/user_settings.dart';
@@ -45,6 +46,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           final selectedTheme = local.theme == AppThemePreference.light
               ? AppThemePreference.dark
               : local.theme;
+          final dailyGoalMinutes = AppConfig.hideMultiTime
+              ? AppConfig.fixedDailyGoalMinutes
+              : local.dailyGoalMinutes;
+          final defaultSessionMinutes = AppConfig.hideMultiTime
+              ? AppConfig.fixedSessionMinutes
+              : local.defaultSessionDurationMinutes;
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -55,24 +62,42 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Daily goal: ${local.dailyGoalMinutes} min'),
-                      Slider(
-                        value: local.dailyGoalMinutes.toDouble(),
-                        min: 15,
-                        max: 120,
-                        divisions: 21,
-                        onChanged: (v) => _save((s) => s.dailyGoalMinutes = v.round()),
-                      ),
+                      Text('Daily goal: $dailyGoalMinutes min'),
+                      if (!AppConfig.hideMultiTime)
+                        Slider(
+                          value: dailyGoalMinutes.toDouble(),
+                          min: 15,
+                          max: 120,
+                          divisions: 21,
+                          onChanged: (v) => _save((s) => s.dailyGoalMinutes = v.round()),
+                        ),
+                      if (AppConfig.hideMultiTime)
+                        Text(
+                          'Fixed at ${AppConfig.fixedDailyGoalMinutes} minutes.',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        ),
                       const SizedBox(height: 8),
-                      Text('Default session: ${local.defaultSessionDurationMinutes} min'),
-                      Slider(
-                        value: local.defaultSessionDurationMinutes.toDouble(),
-                        min: 15,
-                        max: 90,
-                        divisions: 15,
-                        onChanged: (v) =>
-                            _save((s) => s.defaultSessionDurationMinutes = v.round()),
-                      ),
+                      Text('Default session: $defaultSessionMinutes min'),
+                      if (!AppConfig.hideMultiTime)
+                        Slider(
+                          value: defaultSessionMinutes.toDouble(),
+                          min: 15,
+                          max: 90,
+                          divisions: 15,
+                          onChanged: (v) =>
+                              _save((s) => s.defaultSessionDurationMinutes = v.round()),
+                        ),
+                      if (AppConfig.hideMultiTime)
+                        Text(
+                          'Fixed at ${AppConfig.fixedSessionMinutes} minutes.',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        ),
                     ],
                   ),
                 ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../config/app_config.dart';
 import '../../session/streak_service.dart';
 import '../../session/timer_controller.dart';
 import '../../storage/models/user_settings.dart';
@@ -9,14 +10,19 @@ import '../../storage/settings_repository.dart';
 import '../../storage/session_repository.dart';
 
 final selectedDurationProvider = StateProvider.autoDispose<int>((ref) {
+  if (AppConfig.hideMultiTime) {
+    return AppConfig.fixedSessionMinutes;
+  }
   final settings = ref.read(settingsProvider).valueOrNull;
-  return settings?.defaultSessionDurationMinutes ?? 60;
+  return settings?.defaultSessionDurationMinutes ?? AppConfig.fixedSessionMinutes;
 });
 
 final streakStatsProvider = Provider<StreakStats>((ref) {
   final sessions = ref.watch(sessionHistoryProvider).valueOrNull ?? [];
   final settings = ref.watch(settingsProvider).valueOrNull;
-  final goal = settings?.dailyGoalMinutes ?? 60;
+  final goal = AppConfig.hideMultiTime
+      ? AppConfig.fixedDailyGoalMinutes
+      : (settings?.dailyGoalMinutes ?? AppConfig.fixedDailyGoalMinutes);
   final mode = settings?.meditationCountMode ?? MeditationCountMode.cumulative;
   return calculateStreakStats(sessions, goal, mode);
 });
@@ -49,72 +55,79 @@ class HomeScreen extends ConsumerWidget {
       body: settingsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator.adaptive()),
         error: (e, _) => Center(child: Text('Error: $e')),
-        data: (settings) => SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Do nothing.',
-                style: TextStyle(fontSize: 34, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Stay with it.',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(color: colorScheme.onSurfaceVariant),
-              ),
-              const SizedBox(height: 20),
-              _progressCard(context, streaks, settings.dailyGoalMinutes),
-              const SizedBox(height: 16),
-              _durationPicker(context, ref, selectedDuration),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: () async {
-                  if (timerState.status == SessionStatus.running) {
-                    context.push('/session');
-                    return;
-                  }
-                  final controller = ref.read(sessionTimerProvider.notifier);
-                  await controller.start(
-                    durationMinutes: selectedDuration,
-                    preEndAlert: settings.preEndAlertEnabled,
-                    completionAlert: settings.completionSoundEnabled,
-                    vibration: settings.vibrationEnabled,
-                  );
-                  if (context.mounted) {
-                    context.push('/session');
-                  }
-                },
-                child: Text(
-                  timerState.status == SessionStatus.running ? 'Resume session' : 'Start session',
+        data: (settings) {
+          final goalMinutes = AppConfig.hideMultiTime
+              ? AppConfig.fixedDailyGoalMinutes
+              : settings.dailyGoalMinutes;
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Do nothing.',
+                  style: TextStyle(fontSize: 34, fontWeight: FontWeight.w700),
                 ),
-              ),
-              const SizedBox(height: 20),
-              _streakCard(context, streaks),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => context.push('/history'),
-                      child: const Text('History'),
-                    ),
+                const SizedBox(height: 4),
+                Text(
+                  'Stay with it.',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyLarge
+                      ?.copyWith(color: colorScheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: 20),
+                _progressCard(context, streaks, goalMinutes),
+                const SizedBox(height: 16),
+                _durationPicker(context, ref, selectedDuration),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (timerState.status == SessionStatus.running) {
+                      context.push('/session');
+                      return;
+                    }
+                    final controller = ref.read(sessionTimerProvider.notifier);
+                    await controller.start(
+                      durationMinutes: selectedDuration,
+                      preEndAlert: settings.preEndAlertEnabled,
+                      completionAlert: settings.completionSoundEnabled,
+                      vibration: settings.vibrationEnabled,
+                    );
+                    if (context.mounted) {
+                      context.push('/session');
+                    }
+                  },
+                  child: Text(
+                    timerState.status == SessionStatus.running
+                        ? 'Resume session'
+                        : 'Start session',
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => context.push('/settings'),
-                      child: const Text('Settings'),
+                ),
+                const SizedBox(height: 20),
+                _streakCard(context, streaks),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => context.push('/history'),
+                        child: const Text('History'),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => context.push('/settings'),
+                        child: const Text('Settings'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -151,7 +164,27 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _durationPicker(BuildContext context, WidgetRef ref, int selected) {
-    final presets = [15, 30, 45, 60];
+    if (AppConfig.hideMultiTime) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Duration'),
+              const SizedBox(height: 8),
+              ChoiceChip(
+                label: Text('${AppConfig.fixedSessionMinutes} min'),
+                selected: true,
+                onSelected: (_) {},
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final presets = AppConfig.durationPresets;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
