@@ -37,6 +37,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '138963476502',
     projectId: 'live66-live66',
     storageBucket: 'live66-live66.firebasestorage.app',
+    iosClientId:
+        '138963476502-53og1b5scs8ktkkakqm80dipa4fl2h0q.apps.googleusercontent.com',
     iosBundleId: 'live.sixtyxsix.sixtySixtyLive',
   );
 }

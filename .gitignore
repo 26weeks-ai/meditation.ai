@@ -78,7 +78,6 @@ web/
 ############################
 # Firebase secrets
 ############################
-**/GoogleService-Info.plist
 **/google-services.json
 
 ############################

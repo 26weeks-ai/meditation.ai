@@ -4,11 +4,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/auth_controller.dart';
 import '../../auth/guest_auth_provider.dart';
 
-class LoginScreen extends ConsumerWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<AuthUiState>(authControllerProvider, (previous, next) {
+      final error = next.error;
+      if (error == null || error == previous?.error) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+    });
     final authState = ref.watch(authControllerProvider);
     final guestState = ref.watch(guestAuthProvider);
     final isBusy = authState.isLoading || guestState.isLoading;

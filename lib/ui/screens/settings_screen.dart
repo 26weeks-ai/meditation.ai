@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../auth/auth_controller.dart';
+import '../../auth/auth_providers.dart';
+import '../../auth/guest_auth_provider.dart';
 import '../../config/app_config.dart';
 import '../../notifications/notification_service.dart';
 import '../../session/streak_service.dart';
@@ -36,6 +38,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final settingsAsync = ref.watch(settingsProvider);
     final StreakStats stats = ref.watch(streakStatsProvider);
+    final colorScheme = Theme.of(context).colorScheme;
+    final authState = ref.watch(authStateProvider);
+    final guestState = ref.watch(guestAuthProvider);
+    final isSignedIn = authState.valueOrNull != null;
+    final accountBusy = _loading || authState.isLoading || guestState.isLoading;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
@@ -159,10 +166,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             final day = index + 1;
                             final labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
                             final active = local.reminderDays.contains(day);
-                            return ChoiceChip(
+                            return FilterChip(
                               label: Text(labels[index]),
                               selected: active,
-                              onSelected: (_) => _toggleReminderDay(day),
+                              labelStyle: TextStyle(
+                                color: active ? colorScheme.onPrimary : colorScheme.onSurface,
+                              ),
+                              onSelected: (selected) =>
+                                  _toggleReminderDay(day, selected),
                             );
                           }),
                         ),
@@ -241,19 +252,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   'Account',
                   Column(
                     children: [
-                      OutlinedButton.icon(
-                        onPressed: _loading
-                            ? null
-                            : () async {
-                                setState(() => _loading = true);
-                                await ref
-                                    .read(authControllerProvider.notifier)
-                                    .signOut();
-                                if (mounted) setState(() => _loading = false);
-                              },
-                        icon: const Icon(Icons.logout),
-                        label: const Text('Sign out'),
-                      ),
+                      if (isSignedIn)
+                        OutlinedButton.icon(
+                          onPressed: accountBusy
+                              ? null
+                              : () async {
+                                  setState(() => _loading = true);
+                                  await ref
+                                      .read(authControllerProvider.notifier)
+                                      .signOut();
+                                  if (mounted) setState(() => _loading = false);
+                                },
+                          icon: const Icon(Icons.logout),
+                          label: const Text('Sign out'),
+                        )
+                      else
+                        OutlinedButton.icon(
+                          onPressed: accountBusy
+                              ? null
+                              : () async {
+                                  setState(() => _loading = true);
+                                  await ref
+                                      .read(guestAuthProvider.notifier)
+                                      .disableGuest();
+                                  if (mounted) setState(() => _loading = false);
+                                },
+                          icon: const Icon(Icons.login),
+                          label: const Text('Sign in'),
+                        ),
                     ],
                   ),
                 ),
@@ -299,14 +325,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await _save((s) => s.reminderEnabled = enabled);
   }
 
-  Future<void> _toggleReminderDay(int day) async {
+  Future<void> _toggleReminderDay(int day, bool selected) async {
     await _save((s) {
-      if (s.reminderDays.contains(day)) {
-        s.reminderDays.remove(day);
+      final days = List<int>.from(s.reminderDays);
+      if (selected) {
+        if (!days.contains(day)) {
+          days.add(day);
+        }
       } else {
-        s.reminderDays.add(day);
+        days.remove(day);
       }
-      s.reminderDays.sort();
+      days.sort();
+      s.reminderDays = days;
     });
   }
 
