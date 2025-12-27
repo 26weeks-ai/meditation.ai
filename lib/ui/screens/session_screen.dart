@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../session/timer_controller.dart';
+import '../widgets/breath_orb.dart';
 
 class SessionScreen extends ConsumerStatefulWidget {
   const SessionScreen({super.key});
@@ -11,19 +12,12 @@ class SessionScreen extends ConsumerStatefulWidget {
   ConsumerState<SessionScreen> createState() => _SessionScreenState();
 }
 
-class _SessionScreenState extends ConsumerState<SessionScreen>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _breathController;
+class _SessionScreenState extends ConsumerState<SessionScreen> {
   ProviderSubscription<SessionTimerState>? _sessionListener;
 
   @override
   void initState() {
     super.initState();
-    _breathController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 6),
-    )..repeat(reverse: true);
-
     _sessionListener = ref.listenManual<SessionTimerState>(
       sessionTimerProvider,
       (previous, next) {
@@ -42,7 +36,6 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   @override
   void dispose() {
     _sessionListener?.close();
-    _breathController.dispose();
     super.dispose();
   }
 
@@ -50,10 +43,6 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   Widget build(BuildContext context) {
     final state = ref.watch(sessionTimerProvider);
     final remaining = state.remaining;
-    final breathingCurve = CurvedAnimation(
-      parent: _breathController,
-      curve: Curves.easeInOut,
-    );
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -63,20 +52,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ScaleTransition(
-              scale: Tween<double>(
-                begin: 0.85,
-                end: 1.05,
-              ).animate(breathingCurve),
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(60),
-                ),
-              ),
-            ),
+            const BreathOrb(size: 120),
             const SizedBox(height: 24),
             Text(
               _formatDuration(remaining),
