@@ -362,7 +362,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       s.reminderDays = days;
     });
   }
-
   Future<void> _handleDndToggle(bool enabled) async {
     if (_isIos) {
       if (!enabled) {
