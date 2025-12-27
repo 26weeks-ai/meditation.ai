@@ -10,7 +10,7 @@ import '../storage/session_repository.dart';
 
 const _sessionRunningPrefsKey = 'sixty_sixty_live.session_running';
 
-enum SessionStatus { idle, running, completed, interrupted }
+enum SessionStatus { idle, running, paused, completed, interrupted }
 
 class SessionTimerState {
   const SessionTimerState({
@@ -56,6 +56,51 @@ class SessionTimerController extends StateNotifier<SessionTimerState> {
   final SessionRepository _sessions;
   final NotificationService _notifications;
   Timer? _ticker;
+  DateTime? _pausedAt;
+  Duration _pausedDuration = Duration.zero;
+  bool _preEndAlert = false;
+  bool _completionAlert = false;
+  bool _vibration = false;
+
+  Duration _elapsedAt(DateTime now) {
+    final record = state.record;
+    if (record == null) return Duration.zero;
+    final pausedExtra =
+        _pausedAt == null ? Duration.zero : now.difference(_pausedAt!);
+    final elapsed = now.difference(record.startTime) -
+        _pausedDuration -
+        pausedExtra;
+    return elapsed.isNegative ? Duration.zero : elapsed;
+  }
+
+  Duration _remainingAt(DateTime now) {
+    final record = state.record;
+    if (record == null) return Duration.zero;
+    final planned = Duration(minutes: record.plannedDurationMinutes);
+    final remaining = planned - _elapsedAt(now);
+    return remaining.isNegative ? Duration.zero : remaining;
+  }
+
+  int _remainingMinutes(Duration remaining) {
+    if (remaining.inSeconds <= 0) return 0;
+    return (remaining.inSeconds / 60).ceil();
+  }
+
+  void _resetPauseState() {
+    _pausedAt = null;
+    _pausedDuration = Duration.zero;
+  }
+
+  void _resetAlertConfig() {
+    _preEndAlert = false;
+    _completionAlert = false;
+    _vibration = false;
+  }
+
+  void _startTicker() {
+    _ticker?.cancel();
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
+  }
 
   Future<void> _setSessionRunningFlag(bool running) async {
     final prefs = await SharedPreferences.getInstance();
@@ -68,7 +113,8 @@ class SessionTimerController extends StateNotifier<SessionTimerState> {
     required bool completionAlert,
     required bool vibration,
   }) async {
-    if (state.status == SessionStatus.running) {
+    if (state.status == SessionStatus.running ||
+        state.status == SessionStatus.paused) {
       await reset();
     }
     final start = DateTime.now();
@@ -80,6 +126,10 @@ class SessionTimerController extends StateNotifier<SessionTimerState> {
     final id = await _sessions.insert(record);
     record.id = id;
 
+    _preEndAlert = preEndAlert;
+    _completionAlert = completionAlert;
+    _vibration = vibration;
+    _resetPauseState();
     await _setSessionRunningFlag(true);
     await WakelockPlus.enable();
     await _notifications.scheduleSessionAlerts(
@@ -89,8 +139,7 @@ class SessionTimerController extends StateNotifier<SessionTimerState> {
       vibration: vibration,
     );
 
-    _ticker?.cancel();
-    _ticker = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
+    _startTicker();
     state = SessionTimerState(
       status: SessionStatus.running,
       elapsed: Duration.zero,
@@ -98,12 +147,51 @@ class SessionTimerController extends StateNotifier<SessionTimerState> {
     );
   }
 
+  Future<void> pause() async {
+    if (state.status != SessionStatus.running) return;
+    final now = DateTime.now();
+    _pausedAt = now;
+    final elapsed = _elapsedAt(now);
+    _ticker?.cancel();
+    await _setSessionRunningFlag(false);
+    await _notifications.cancelSessionAlerts();
+    await WakelockPlus.disable();
+    state = state.copyWith(status: SessionStatus.paused, elapsed: elapsed);
+  }
+
+  Future<void> resume() async {
+    if (state.status != SessionStatus.paused || state.record == null) return;
+    final now = DateTime.now();
+    final pausedAt = _pausedAt;
+    if (pausedAt != null) {
+      _pausedDuration += now.difference(pausedAt);
+      _pausedAt = null;
+    }
+    await _setSessionRunningFlag(true);
+    await WakelockPlus.enable();
+    final remaining = _remainingAt(now);
+    await _notifications.scheduleSessionAlerts(
+      durationMinutes: _remainingMinutes(remaining),
+      preEndAlert: _preEndAlert,
+      completionAlert: _completionAlert,
+      vibration: _vibration,
+    );
+    _startTicker();
+    state = state.copyWith(
+      status: SessionStatus.running,
+      elapsed: _elapsedAt(now),
+    );
+  }
+
+  Future<void> resetSession() async {
+    await reset();
+  }
+
   Future<void> endEarly({bool interrupted = true}) async {
     if (state.record == null) return;
     final now = DateTime.now();
     final record = state.record!;
-    final elapsedMinutes = now
-        .difference(record.startTime)
+    final elapsedMinutes = _elapsedAt(now)
         .inMinutes
         .clamp(0, record.plannedDurationMinutes)
         .toInt();
@@ -118,9 +206,11 @@ class SessionTimerController extends StateNotifier<SessionTimerState> {
 
   Future<void> _complete() async {
     if (state.record == null) return;
+    final now = DateTime.now();
     final record = state.record!;
     record
       ..actualDurationMinutes = record.plannedDurationMinutes
+      ..endTime = now
       ..completed = true
       ..interrupted = false;
     await _sessions.update(record);
@@ -129,6 +219,8 @@ class SessionTimerController extends StateNotifier<SessionTimerState> {
 
   Future<void> _wrapUp(SessionStatus status, SessionRecord record) async {
     _ticker?.cancel();
+    _resetPauseState();
+    _resetAlertConfig();
     await _setSessionRunningFlag(false);
     await _notifications.cancelSessionAlerts();
     await WakelockPlus.disable();
@@ -141,21 +233,24 @@ class SessionTimerController extends StateNotifier<SessionTimerState> {
 
   void _tick() {
     final record = state.record;
-    if (record == null) return;
+    if (record == null || state.status != SessionStatus.running) return;
     final now = DateTime.now();
-    final elapsed = now.difference(record.startTime);
-    final remaining = record.endTime.difference(now);
+    final planned = Duration(minutes: record.plannedDurationMinutes);
+    final elapsed = _elapsedAt(now);
+    final remaining = planned - elapsed;
     if (remaining.isNegative || remaining.inSeconds <= 0) {
       _complete();
     } else {
       state = state.copyWith(
-        elapsed: elapsed.isNegative ? Duration.zero : elapsed,
+        elapsed: elapsed,
       );
     }
   }
 
   Future<void> reset() async {
     _ticker?.cancel();
+    _resetPauseState();
+    _resetAlertConfig();
     await _setSessionRunningFlag(false);
     await _notifications.cancelSessionAlerts();
     await WakelockPlus.disable();

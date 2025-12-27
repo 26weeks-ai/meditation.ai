@@ -8,6 +8,7 @@ import '../../session/timer_controller.dart';
 import '../../storage/models/user_settings.dart';
 import '../../storage/settings_repository.dart';
 import '../../storage/session_repository.dart';
+import '../widgets/stat_tile.dart';
 
 final selectedDurationProvider = StateProvider.autoDispose<int?>((ref) => null);
 
@@ -30,6 +31,9 @@ class HomeScreen extends ConsumerWidget {
     final streaks = ref.watch(streakStatsProvider);
     final selectedDuration = ref.watch(selectedDurationProvider);
     final timerState = ref.watch(sessionTimerProvider);
+    final hasActiveSession =
+        timerState.status == SessionStatus.running ||
+        timerState.status == SessionStatus.paused;
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -98,7 +102,7 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: () async {
-                    if (timerState.status == SessionStatus.running) {
+                    if (hasActiveSession) {
                       context.push('/session');
                       return;
                     }
@@ -114,7 +118,7 @@ class HomeScreen extends ConsumerWidget {
                     }
                   },
                   child: Text(
-                    timerState.status == SessionStatus.running
+                    hasActiveSession
                         ? 'Resume session'
                         : 'Start session',
                   ),
@@ -220,38 +224,58 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _streakCard(BuildContext context, StreakStats stats) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final totalColor = colorScheme.onSurface.withOpacity(0.9);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _metric(context, 'Current streak', '${stats.currentStreakDays}d'),
-            _metric(context, 'Best streak', '${stats.bestStreakDays}d'),
-            _metric(context, 'Total mins', '${stats.totalMinutes}'),
+            Expanded(
+              child: StatTile(
+                title: 'Current streak',
+                valueText: '${stats.currentStreakDays}',
+                icon: StatIcon(
+                  icon: Icons.local_fire_department_rounded,
+                  active: stats.currentStreakDays > 0,
+                  gradientColors: const [
+                    Color(0xFFFFB000),
+                    Color(0xFFFF3D00),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: StatTile(
+                title: 'Best streak',
+                valueText: '${stats.bestStreakDays}',
+                icon: StatIcon(
+                  icon: Icons.emoji_events_rounded,
+                  active: stats.bestStreakDays > 0,
+                  gradientColors: const [
+                    Color(0xFFFFD36A),
+                    Color(0xFFB8860B),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: StatTile(
+                title: 'Total mins',
+                valueText: '${stats.totalMinutes}',
+                icon: Icon(
+                  Icons.schedule_rounded,
+                  size: 20,
+                  color: totalColor,
+                ),
+              ),
+            ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _metric(BuildContext context, String label, String value) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
-        ),
-      ],
     );
   }
 }
