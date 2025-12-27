@@ -18,6 +18,9 @@ class UserSettings {
   bool preEndAlertEnabled = false;
   bool completionSoundEnabled = true;
   bool vibrationEnabled = true;
+  bool dndEnabled = false;
+  bool iosShortcutsSetupDone = false;
+  bool androidPolicyAccessGrantedCached = false;
   @Enumerated(EnumType.name)
   AppThemePreference theme = AppThemePreference.dark;
   bool onboardingCompleted = false;

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
@@ -8,6 +9,7 @@ import '../../auth/auth_controller.dart';
 import '../../auth/auth_providers.dart';
 import '../../auth/guest_auth_provider.dart';
 import '../../config/app_config.dart';
+import '../../notifications/dnd_service.dart';
 import '../../notifications/notification_service.dart';
 import '../../session/streak_service.dart';
 import '../../storage/models/user_settings.dart';
@@ -59,6 +61,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           final defaultSessionMinutes = AppConfig.hideMultiTime
               ? AppConfig.fixedSessionMinutes
               : local.defaultSessionDurationMinutes;
+          final isAndroid =
+              !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+          final isIos = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+          final dndSupported = isAndroid || isIos;
+          final dndSubtitle = isIos
+              ? (local.iosShortcutsSetupDone
+                    ? 'Shortcuts automation set up.'
+                    : 'Requires Shortcuts automation.')
+              : isAndroid
+              ? (local.androidPolicyAccessGrantedCached
+                    ? 'Notification policy access granted.'
+                    : 'Requires Notification Policy access.')
+              : 'Not supported on this platform.';
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -79,16 +94,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           onChanged: (v) =>
                               _save((s) => s.dailyGoalMinutes = v.round()),
                         ),
-                      if (AppConfig.hideMultiTime)
-                        Text(
-                          'Fixed at ${AppConfig.fixedDailyGoalMinutes} minutes.',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                        ),
                       const SizedBox(height: 8),
                       Text('Default session: $defaultSessionMinutes min'),
                       if (!AppConfig.hideMultiTime)
@@ -100,17 +105,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           onChanged: (v) => _save(
                             (s) => s.defaultSessionDurationMinutes = v.round(),
                           ),
-                        ),
-                      if (AppConfig.hideMultiTime)
-                        Text(
-                          'Fixed at ${AppConfig.fixedSessionMinutes} minutes.',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                        ),
+                        )
                     ],
                   ),
                 ),
@@ -170,7 +165,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               label: Text(labels[index]),
                               selected: active,
                               labelStyle: TextStyle(
-                                color: active ? colorScheme.onPrimary : colorScheme.onSurface,
+                                color: active
+                                    ? colorScheme.onPrimary
+                                    : colorScheme.onSurface,
                               ),
                               onSelected: (selected) =>
                                   _toggleReminderDay(day, selected),
@@ -195,6 +192,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         onChanged: (v) => _save((s) => s.vibrationEnabled = v),
                         title: const Text('Vibration'),
                       ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _section(
+                  'Do Not Disturb during sessions',
+                  Column(
+                    children: [
+                      SwitchListTile(
+                        value: local.dndEnabled,
+                        onChanged: dndSupported
+                            ? (value) => _handleDndToggle(value)
+                            : null,
+                        title: const Text('Enabled'),
+                        subtitle: Text(dndSubtitle),
+                      ),
+                      if (isAndroid &&
+                          local.dndEnabled &&
+                          !local.androidPolicyAccessGrantedCached)
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton(
+                            onPressed: _openAndroidPolicySettings,
+                            child: const Text('Open DND settings'),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -340,6 +363,144 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     });
   }
 
+  Future<void> _handleDndToggle(bool enabled) async {
+    if (_isIos) {
+      if (!enabled) {
+        await _save((s) => s.dndEnabled = false);
+        return;
+      }
+      final confirmed = await _showIosDndSetupSheet();
+      if (!mounted) return;
+      if (confirmed) {
+        await _save((s) {
+          s.iosShortcutsSetupDone = true;
+          s.dndEnabled = true;
+        });
+      } else {
+        await _save((s) => s.dndEnabled = false);
+      }
+      return;
+    }
+
+    if (_isAndroid) {
+      final dndService = ref.read(dndServiceProvider);
+      var hasAccess = false;
+      if (enabled) {
+        hasAccess = await dndService.hasPolicyAccess();
+      }
+      await _save((s) {
+        s.dndEnabled = enabled;
+        if (enabled) {
+          s.androidPolicyAccessGrantedCached = hasAccess;
+        }
+      });
+      if (enabled && !hasAccess && mounted) {
+        final open = await _showAndroidDndDialog();
+        if (open == true) {
+          await _openAndroidPolicySettings();
+        }
+      }
+    }
+  }
+
+  bool get _isAndroid =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
+  bool get _isIos => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
+  Future<void> _openAndroidPolicySettings() async {
+    if (!_isAndroid) return;
+    final dndService = ref.read(dndServiceProvider);
+    await dndService.requestPolicyAccess();
+    final hasAccess = await dndService.hasPolicyAccess();
+    await _save((s) => s.androidPolicyAccessGrantedCached = hasAccess);
+  }
+
+  Future<bool?> _showAndroidDndDialog() {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Enable Do Not Disturb'),
+        content: const Text(
+          'Allow 6060live to control Do Not Disturb during sessions. '
+          'This requires Notification Policy access in system settings.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Not now'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<bool> _showIosDndSetupSheet() async {
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Enable Auto DND',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'iOS does not allow apps to toggle Do Not Disturb directly. '
+                'Set up a Shortcuts automation once:',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 12),
+              const _DndStepText(
+                index: 1,
+                text: 'Shortcuts -> Automation -> When 6060live opened.',
+              ),
+              const _DndStepText(
+                index: 2,
+                text: 'Set Focus to Do Not Disturb: On.',
+              ),
+              const SizedBox(height: 8),
+              const _DndStepText(
+                index: 3,
+                text: 'Shortcuts -> Automation -> When 6060live closed.',
+              ),
+              const _DndStepText(
+                index: 4,
+                text: 'Set Focus to Do Not Disturb: Off.',
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Not now'),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text("I've enabled it"),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    return result == true;
+  }
+
   Widget _modeOption(
     BuildContext context,
     UserSettings local,
@@ -434,5 +595,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final minute = int.tryParse(parts[1]);
     if (hour == null || minute == null) return null;
     return TimeOfDay(hour: hour, minute: minute);
+  }
+}
+
+class _DndStepText extends StatelessWidget {
+  const _DndStepText({required this.index, required this.text});
+
+  final int index;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('$index.', style: TextStyle(color: color)),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text)),
+        ],
+      ),
+    );
   }
 }

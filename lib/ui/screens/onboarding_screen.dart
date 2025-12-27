@@ -80,13 +80,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         onChanged: (v) =>
                             setState(() => _dailyGoal = v.round()),
                       ),
-                    if (AppConfig.hideMultiTime)
-                      Text(
-                        'Fixed at ${AppConfig.fixedDailyGoalMinutes} minutes.',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
                   ],
                 ),
               ),
@@ -106,14 +99,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         label: '$_defaultDuration',
                         onChanged: (v) =>
                             setState(() => _defaultDuration = v.round()),
-                      ),
-                    if (AppConfig.hideMultiTime)
-                      Text(
-                        'Fixed at ${AppConfig.fixedSessionMinutes} minutes.',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
+                      )
                   ],
                 ),
               ),

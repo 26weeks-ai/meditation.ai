@@ -158,6 +158,10 @@ class SettingsRepository {
     settings.preEndAlertEnabled = source.preEndAlertEnabled;
     settings.completionSoundEnabled = source.completionSoundEnabled;
     settings.vibrationEnabled = source.vibrationEnabled;
+    settings.dndEnabled = source.dndEnabled;
+    settings.iosShortcutsSetupDone = source.iosShortcutsSetupDone;
+    settings.androidPolicyAccessGrantedCached =
+        source.androidPolicyAccessGrantedCached;
     settings.theme = source.theme;
     settings.onboardingCompleted = source.onboardingCompleted;
     settings.meditationCountMode = source.meditationCountMode;
